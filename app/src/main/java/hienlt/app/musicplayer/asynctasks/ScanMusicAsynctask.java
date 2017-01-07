@@ -110,7 +110,87 @@ public class ScanMusicAsynctask extends AsyncTask<Void, File, ArrayList<Song>> {
 //                ((ScanActivity) context).tvFile.setText(values[0].getName());
 //            }
 //        });
-        
+        if (values[0].getName().endsWith(".mp3")) {
+            numMusicFind++;
+            try {
+                MP3File mp3File = (MP3File) AudioFileIO.read(values[0]);
+                if (mp3File.getAudioHeader().getTrackLength() > 59) {
+                    //Add song to list
+                    final Song song = new Song();
+                    song.setId(Common.generateUUID(values[0].getAbsolutePath()));
+                    song.setParentFolder(values[0].getParent());
+                    song.setLocalDataSource(values[0].getAbsolutePath());
+                    if (mp3File.hasID3v2Tag()) {
+                        ID3v24Tag v2Tag = mp3File.getID3v2TagAsv24();
+                        //Tên bài hát
+                        song.setTitle(v2Tag.getFirst(ID3v24Frames.FRAME_ID_TITLE));
+                        //Album
+                        song.setAlbum(v2Tag.getFirst(ID3v24Frames.FRAME_ID_ALBUM));
+                        //Ca sĩ
+                        song.setArtist(v2Tag.getFirst(ID3v24Frames.FRAME_ID_ARTIST));
+                        //Năm xuất bản
+                        song.setYear(NumberUtils.parseInt(v2Tag.getFirst(ID3v24Frames.FRAME_ID_YEAR), 0));
+                        //Thể loại
+                        song.setGenre(v2Tag.getFirst(ID3v24Frames.FRAME_ID_GENRE));
+
+                        //Cache albumArt
+                        if (cache != null) {
+                            if (!cache.containsKey(song.getAlbum())) {
+                                Artwork artwork = v2Tag.getFirstArtwork();
+                                if (artwork != null) {
+                                    byte[] bytes = artwork.getBinaryData();
+                                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                    cache.put(song.getAlbum(), bitmap);
+                                }
+                            }
+                        }
+                    }
+
+                    song.setDuration(mp3File.getAudioHeader().getTrackLength() * 1000);
+                    song.setBitRate((int) mp3File.getAudioHeader().getBitRateAsNumber());
+                    if (TextUtils.isEmpty(song.getTitle())) {
+                        String fname = values[0].getName();
+                        int pos = fname.lastIndexOf(".");
+                        if (pos > 0) {
+                            fname = fname.substring(0, pos);
+                        }
+                        song.setTitle(fname);
+                    }
+
+                    if (TextUtils.isEmpty(song.getAlbum()))
+                        song.setAlbum("<unknown>");
+                    if (TextUtils.isEmpty(song.getArtist()))
+                        song.setArtist("<unknown>");
+
+                    song.setSize(values[0].length());
+                    listSong.add(song);
+
+                    myHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            iScanMedia.foundMp3(song, values[0].getAbsolutePath());
+                        }
+                    });
+                }
+            } catch (CannotReadException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (TagException e) {
+                e.printStackTrace();
+            } catch (ReadOnlyFileException e) {
+                e.printStackTrace();
+            } catch (InvalidAudioFrameException e) {
+                e.printStackTrace();
+            }
+        } else {
+            myHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    iScanMedia.foundMp3(null, values[0].getAbsolutePath());
+                }
+            });
+        }
 
     }
 }
