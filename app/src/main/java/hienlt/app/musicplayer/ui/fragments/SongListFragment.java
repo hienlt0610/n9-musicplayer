@@ -89,6 +89,12 @@ public class SongListFragment extends Fragment {
         if (adapter != null)
             adapter.getFilter().filter(key);
     }
+	
+	public void searchSong(String key) {
+        LocalSongRecyclerViewAdapter adapter = (LocalSongRecyclerViewAdapter) recyclerView.getAdapter();
+        if (adapter != null)
+            adapter.getFilter().filter(key);
+    }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
