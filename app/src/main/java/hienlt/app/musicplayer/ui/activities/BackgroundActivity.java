@@ -16,6 +16,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
+import java.util.ArrayList;
+
+import hienlt.app.musicplayer.R;
+import hienlt.app.musicplayer.adapter.BackgroundGridAdapter;
+import hienlt.app.musicplayer.core.HLBaseActivity;
+import hienlt.app.musicplayer.models.BackgroundImage;
+import hienlt.app.musicplayer.utils.Common;
+import hienlt.app.musicplayer.utils.GaussianBlur;
+import hienlt.app.musicplayer.utils.ImageUtils;
+import hienlt.app.musicplayer.utils.ItemClickSupport;
+import hienlt.app.musicplayer.utils.Settings;
+import hienlt.app.musicplayer.utils.SystemUtils;
+
 public class BackgroundActivity extends HLBaseActivity implements ItemClickSupport.OnItemClickListener {
 
     RecyclerView recyclerView;
@@ -30,6 +43,24 @@ public class BackgroundActivity extends HLBaseActivity implements ItemClickSuppo
         imgBackground = (ImageView) findViewById(R.id.imgBackground);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 3));
 
+        setBackground(false);
+        initListBackground();
+
+        //Get current background
+        boolean isDefaultBkg = Settings.getInstance().get(Common.DEFAULT_BACKGROUND, false);
+        BackgroundImage currBackground = new BackgroundImage();
+        if(isDefaultBkg){
+            int bkgID = Settings.getInstance().get(Common.BACKGROUND_ID,0);
+            currBackground.setId(bkgID);
+        }else{
+            String path = Settings.getInstance().get(Common.MY_BACKGROUND, null);
+            currBackground.setPath(path);
+        }
+
+        adapter = new BackgroundGridAdapter(this, images);
+        adapter.setSelectedImage(currBackground);
+        recyclerView.setAdapter(adapter);
+        ItemClickSupport.addTo(recyclerView).setOnItemClickListener(this);
     }
 
     @Override
