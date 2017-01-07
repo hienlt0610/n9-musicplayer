@@ -333,6 +333,36 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         });
         VolleyConnection.getInstance(this).addRequestToQueue(request);
     }
+	
+	private void downloadLyric(String url) {
+        StringRequest request = new StringRequest(url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                DiskLruFileCache lyricCache = CacheManager.getInstance().getLyricCache();
+                if (lyricCache != null) {
+                    lyricCache.put(getCurrentSong().getTitle(), response);
+                    notifyClients(META_CHANGE);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        }) {
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                String parsed = null;
+                try {
+                    parsed = new String(response.data, "UTF-8");
+                    return Response.success(parsed, HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                }
+            }
+        };
+        VolleyConnection.getInstance(this).addRequestToQueue(request);
+    }
 
     /**
      * Set the List song to Service
