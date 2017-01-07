@@ -118,6 +118,14 @@ public class HomeFragment extends HLBaseFragment implements View.OnClickListener
         }
     }
 
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int songNums = SongProvider.getInstance(getActivity()).getSongNum();
+            tvSongNum.setText(songNums+" bài hát");
+        }
+    };
+
     @Override
     public void onStart() {
         super.onStart();
