@@ -867,7 +867,24 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             if (minutes == 0)
                 Common.showToast(this, "Đã hủy hẹn giờ tắt nhạc");
         }
-        
+        secondsCountdown = minutes * 60;
+        if (minutes > 0) {
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    secondsCountdown -= 1;
+                    if (secondsCountdown <= 0) {
+                        int what = 69; //number finish countdown
+                        handler.sendEmptyMessage(what);
+                        timer.cancel();
+                        timer.purge();
+                        timer = null;
+                    }
+                }
+            }, 0, 1000);
+            Common.showToast(this, "Chương trình sẽ tắt sau: " + minutes + " phút");
+        }
     }
 
     android.os.Handler handler = new android.os.Handler(new android.os.Handler.Callback() {
