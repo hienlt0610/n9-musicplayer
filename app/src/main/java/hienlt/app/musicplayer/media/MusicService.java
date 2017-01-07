@@ -234,6 +234,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 	 *
 	 * Auto download Lyric
 	 * Created By Nguyen Hong Tam
+	 * Email: contact@nguyentam.me
 	**/
 
 	private void autoFindDownloadLyric() {
