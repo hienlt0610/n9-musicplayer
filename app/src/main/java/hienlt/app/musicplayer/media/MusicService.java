@@ -229,7 +229,140 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             }
         }
     }
+	
+	/**
+	 *
+	 * Auto download Lyric
+	 * Created By Nguyen Hong Tam
+	**/
 
+	private void autoFindDownloadLyric() {
+        if (getState() == MusicState.Stop) return;
+        if (getCurrentSong() == null) return;
+        if (CacheManager.getInstance().getLyricCache().containsKey(getCurrentSong().getTitle()))
+            return;
+        String songTitle = Uri.encode(getCurrentSong().getTitle());
+        String artist = Uri.encode(getCurrentSong().getArtist());
+        String keySearch = songTitle + "+" + artist;
+        String url = "http://mp3.zing.vn/suggest/search?term=" + keySearch;
+        JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                if (response == null) return;
+                try {
+                    JSONObject songs = response.getJSONObject("song");
+                    JSONArray listSong = songs.getJSONArray("list");
+                    if (listSong.length() == 0) {
+                        tryToFindMusic();
+                        return;
+                    }
+                    String songId = listSong.getJSONObject(0).getString("object_id");
+                    requestSongInfo(songId);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Common.showLog(error.toString());
+                if (error instanceof NoConnectionError) {
+                }
+            }
+        });
+        VolleyConnection.getInstance(this).addRequestToQueue(request);
+    }
+	
+	public void tryToFindMusic() {
+        String songTitle = Uri.encode(getCurrentSong().getTitle() + " ");
+        String artist = Uri.encode(" " + getCurrentSong().getArtist());
+        String keySearch = songTitle + "+" + artist;
+        String url = "http://mp3.zing.vn/tim-kiem/bai-hat.html?q=" + keySearch;
+        StringRequest request = new StringRequest(url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Document document = Jsoup.parse(response);
+                Element item = document.select("div.item-song").first();
+                if (item != null) {
+                    String id = item.attr("data-id");
+                    try {
+                        requestSongInfo(id);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Common.showLog("tryToFindMusic: " + error.toString());
+            }
+        });
+        VolleyConnection.getInstance(this).addRequestToQueue(request);
+    }
+	
+	private void requestSongInfo(String songId) throws JSONException {
+        JSONObject idObj = new JSONObject();
+        idObj.put("id", songId);
+        String url = "http://api.mp3.zing.vn/api/mobile/song/getsonginfo?requestdata=" + idObj.toString();
+        JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONObject responseObj = response.getJSONObject("response");
+                    if (responseObj.has("is_error")) {
+                        Common.showLog(responseObj.getString("msg"));
+                        return;
+                    }
+                    String lyricUrl = response.getString("lyrics_file");
+                    String download320 = response.getJSONObject("source").getString("320");
+                    Common.showLog("lyric: " + lyricUrl);
+                    Common.showLog("download: " + download320);
+                    DiskLruFileCache lyricCache = CacheManager.getInstance().getLyricCache();
+                    if (lyricUrl != null && lyricCache != null && !lyricCache.containsKey(getCurrentSong().getTitle()))
+                        downloadLyric(lyricUrl);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        VolleyConnection.getInstance(this).addRequestToQueue(request);
+    }
+	
+	private void downloadLyric(String url) {
+        StringRequest request = new StringRequest(url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                DiskLruFileCache lyricCache = CacheManager.getInstance().getLyricCache();
+                if (lyricCache != null) {
+                    lyricCache.put(getCurrentSong().getTitle(), response);
+                    notifyClients(META_CHANGE);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        }) {
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                String parsed = null;
+                try {
+                    parsed = new String(response.data, "UTF-8");
+                    return Response.success(parsed, HttpHeaderParser.parseCacheHeaders(response));
+                } catch (UnsupportedEncodingException e) {
+                    return Response.error(new ParseError(e));
+                }
+            }
+        };
+        VolleyConnection.getInstance(this).addRequestToQueue(request);
+    }
 
     /**
      * Set the List song to Service
