@@ -300,6 +300,39 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         });
         VolleyConnection.getInstance(this).addRequestToQueue(request);
     }
+	
+	private void requestSongInfo(String songId) throws JSONException {
+        JSONObject idObj = new JSONObject();
+        idObj.put("id", songId);
+        String url = "http://api.mp3.zing.vn/api/mobile/song/getsonginfo?requestdata=" + idObj.toString();
+        JsonObjectRequest request = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONObject responseObj = response.getJSONObject("response");
+                    if (responseObj.has("is_error")) {
+                        Common.showLog(responseObj.getString("msg"));
+                        return;
+                    }
+                    String lyricUrl = response.getString("lyrics_file");
+                    String download320 = response.getJSONObject("source").getString("320");
+                    Common.showLog("lyric: " + lyricUrl);
+                    Common.showLog("download: " + download320);
+                    DiskLruFileCache lyricCache = CacheManager.getInstance().getLyricCache();
+                    if (lyricUrl != null && lyricCache != null && !lyricCache.containsKey(getCurrentSong().getTitle()))
+                        downloadLyric(lyricUrl);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        VolleyConnection.getInstance(this).addRequestToQueue(request);
+    }
 
     /**
      * Set the List song to Service
