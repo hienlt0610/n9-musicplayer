@@ -442,4 +442,23 @@ public class LocalSongRecyclerViewAdapter extends RecyclerView.Adapter<LocalSong
     public List<Song> getList() {
         return this.listSong;
     }
+	
+	@Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults result = new FilterResults();
+                String filterString = constraint.toString().toLowerCase();
+                result.values = SongProvider.getInstance(context).getListSongByKey(filterString);
+                return result;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                searchString = constraint.toString();
+                replaceList((ArrayList<Song>) results.values);
+            }
+        };
+    }
 }
