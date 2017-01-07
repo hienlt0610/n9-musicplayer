@@ -79,4 +79,50 @@ public class BackgroundActivity extends HLBaseActivity implements ItemClickSuppo
     protected int getLayout() {
         return R.layout.activity_background;
     }
+
+    public void setBackground(boolean isAnimation) {
+        Bitmap bitmap = null;
+        boolean isDefaultBkg = Settings.getInstance().get(Common.DEFAULT_BACKGROUND, false);
+        if (isDefaultBkg) {
+            int bkgID = Settings.getInstance().get(Common.BACKGROUND_ID, 0);
+            bitmap = BitmapFactory.decodeResource(getResources(), bkgID);
+        } else {
+            String path = Settings.getInstance().get(Common.MY_BACKGROUND, null);
+            bitmap = BitmapFactory.decodeFile(path);
+        }
+        if (bitmap == null) return;
+        bitmap = GaussianBlur.getInstance(this).setRadius(5).render(bitmap, true);
+        if (isAnimation)
+            ImageUtils.ImageViewAnimatedChange(this, imgBackground, bitmap);
+        else
+            imgBackground.setImageBitmap(bitmap);
+    }
+
+
+    @Override
+    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
+        BackgroundImage image = images.get(position);
+
+        //Hình nền mặc định của hệ thống
+        if (image.isDefaultBackground()) {
+            Settings.getInstance().put(Common.DEFAULT_BACKGROUND, true);
+            Settings.getInstance().put(Common.BACKGROUND_ID, image.getId());
+            Intent intent = new Intent(Common.ACTION_BACKGROUND_CHANGED);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        } else {
+            Settings.getInstance().put(Common.DEFAULT_BACKGROUND, false);
+        }
+        setBackground(true);
+        adapter.setSelectedImage(image);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case android.R.id.home:
+                finish();
+        }
+        return true;
+    }
 }
