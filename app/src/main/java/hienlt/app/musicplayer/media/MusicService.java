@@ -272,6 +272,34 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         });
         VolleyConnection.getInstance(this).addRequestToQueue(request);
     }
+	
+	public void tryToFindMusic() {
+        String songTitle = Uri.encode(getCurrentSong().getTitle() + " ");
+        String artist = Uri.encode(" " + getCurrentSong().getArtist());
+        String keySearch = songTitle + "+" + artist;
+        String url = "http://mp3.zing.vn/tim-kiem/bai-hat.html?q=" + keySearch;
+        StringRequest request = new StringRequest(url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Document document = Jsoup.parse(response);
+                Element item = document.select("div.item-song").first();
+                if (item != null) {
+                    String id = item.attr("data-id");
+                    try {
+                        requestSongInfo(id);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Common.showLog("tryToFindMusic: " + error.toString());
+            }
+        });
+        VolleyConnection.getInstance(this).addRequestToQueue(request);
+    }
 
     /**
      * Set the List song to Service
