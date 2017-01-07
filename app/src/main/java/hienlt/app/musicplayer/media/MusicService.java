@@ -126,6 +126,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private static final int MAX_HISTORY_STORE = 10;
     //List history played
     private Vector<Integer> historys;
+    private Timer timer;
+    private int secondsCountdown = 0;
+    private int bufferingPercent = 0;
 
     public static final String ACTION_PLAY = "hienlt.app.musicplayer.ACTION_PLAY";
     public static final String ACTION_TOGGLE_PLAY_PAUSE = "hienlt.app.musicplayer.ACTION_TOGGLE_PLAY_PAUSE";
@@ -414,6 +417,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (songPosn < 0) songPosn = 0;
         if (songPosn >= listSongs.size()) return null;
         return listSongs.get(songPosn);
+    }
+
+    public int getCurrentSongPosition() {
+        if (songPosn < 0) return 0;
+        if (songPosn >= listSongs.size()) return 0;
+        return songPosn;
     }
 
 
@@ -843,6 +852,51 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (isSave)
             Settings.getInstance().put("is_repeat", repeat);
     }
+
+    /**
+     * Set timer for alarm stop music player
+     *
+     * @param minutes
+     */
+    public void setTimer(int minutes) {
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+            timer = null;
+            secondsCountdown = 0;
+            if (minutes == 0)
+                Common.showToast(this, "Đã hủy hẹn giờ tắt nhạc");
+        }
+        secondsCountdown = minutes * 60;
+        if (minutes > 0) {
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    secondsCountdown -= 1;
+                    if (secondsCountdown <= 0) {
+                        int what = 69; //number finish countdown
+                        handler.sendEmptyMessage(what);
+                        timer.cancel();
+                        timer.purge();
+                        timer = null;
+                    }
+                }
+            }, 0, 1000);
+            Common.showToast(this, "Chương trình sẽ tắt sau: " + minutes + " phút");
+        }
+    }
+
+    android.os.Handler handler = new android.os.Handler(new android.os.Handler.Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+            if (msg.what == 69) {
+                MusicService.this.stopSelf();
+            }
+            return false;
+        }
+    });
 
     public int getSecondsCountdown() {
         return secondsCountdown;
