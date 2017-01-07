@@ -87,7 +87,18 @@ public class ScanMusicAsynctask extends AsyncTask<Void, File, ArrayList<Song>> {
     @Override
     protected void onPostExecute(final ArrayList<Song> songs) {
         super.onPostExecute(songs);
-        
+        ((ScanActivity) context).tvMusicUrl.setText("Đang update...");
+        ((ScanActivity) context).tvFile.setText("");
+        if (isCancelled) return;
+        if (iScanMedia != null) {
+            myHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    SongProvider.getInstance(context).updateListSong(songs);
+                    iScanMedia.finallyScanMedia((ArrayList<Song>) songs);
+                }
+            });
+        }
     }
 
     @Override
