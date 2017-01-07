@@ -193,4 +193,21 @@ public class ScanMusicAsynctask extends AsyncTask<Void, File, ArrayList<Song>> {
         }
 
     }
+
+    private void scanDirectory(File directory) {
+        if (isCancelled) return;
+        if (directory != null) {
+            File[] listFiles = directory.listFiles();
+            if (listFiles != null && listFiles.length > 0) {
+                for (File file : listFiles) {
+                    if (isCancelled) break;
+                    if (file.isDirectory()) {
+                        scanDirectory(file);
+                    } else {
+                        onProgressUpdate(file);
+                    }
+                }
+            }
+        }
+    }
 }
