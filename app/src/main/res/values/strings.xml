@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">MusicPlayer</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_home">HomeActivity</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_local_music">LocalMusicActivity</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+
+    <string name="artist">Ca sĩ</string>
+    <string name="all_local_music">Tất cả bài hát</string>
+    <string name="recently_list">Phát gần đây</string>
+    <string name="albums">Album</string>
+    <string name="folder">Thư mục</string>
+    <string name="playlist">Playlist</string>
+    <string name="song_like">Yêu thích</string>
+    <string name="action_timmer">Hẹn giờ tắt nhạc</string>
+
+</resources>
