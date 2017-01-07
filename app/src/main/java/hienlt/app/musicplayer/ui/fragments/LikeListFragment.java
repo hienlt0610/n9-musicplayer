@@ -54,6 +54,31 @@ public class LikeListFragment extends HLBaseFragment {
         adapter = new LocalSongRecyclerViewAdapter(getActivity(),list);
         recyclerView.setAdapter(adapter);
         mServiceConnection = new MusicServiceConnection(getActivity());
+		ItemClickSupport.addTo(recyclerView).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+            @Override
+            public void onItemClicked(RecyclerView recyclerView, final int position, View v) {
+                Song song = list.get(position);
+                File file = new File(song.getLocalDataSource());
+                if (!file.exists()) {
+                    Common.showToast(getActivity(), "Bài hát này đã bị xóa, vui lòng cập nhật lại");
+                    return;
+                }
+                Intent iSelectSongPlay = new Intent(getActivity(), MusicService.class);
+                mServiceConnection.connect(iSelectSongPlay, new IMusicServiceConnection() {
+                    @Override
+                    public void onConnected(MusicService service) {
+                        if (service.getCurrentSong() == null || !service.getCurrentSong().getId().equals(list.get(position).getId())) {
+                            service.setSongPosition(position);
+                            service.setPlayListSong(list);
+                            service.setMediaType(MusicService.MediaType.Local);
+                            service.playSong();
+                        }
+                        Intent intent = new Intent(getActivity(), PlaybackActivity.class);
+                        getActivity().startActivity(intent);
+                    }
+                });
+            }
+        });
     }
 
     @Override
