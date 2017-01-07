@@ -887,6 +887,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         }
     }
 
+    
+
+    public int getSecondsCountdown() {
+        return secondsCountdown;
+    }
+
     android.os.Handler handler = new android.os.Handler(new android.os.Handler.Callback() {
 
         @Override
@@ -897,10 +903,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             return false;
         }
     });
-
-    public int getSecondsCountdown() {
-        return secondsCountdown;
-    }
 
     private void requestLink(final String youtubeUrl) {
         String url = "http://www.listentoyoutube.com/cc/conversioncloud.php";
