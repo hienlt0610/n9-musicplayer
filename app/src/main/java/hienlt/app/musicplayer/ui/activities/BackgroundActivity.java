@@ -63,6 +63,18 @@ public class BackgroundActivity extends HLBaseActivity implements ItemClickSuppo
         ItemClickSupport.addTo(recyclerView).setOnItemClickListener(this);
     }
 
+    private void initListBackground() {
+        images = new ArrayList<>();
+        images.add(new BackgroundImage(R.drawable.bg1, BitmapFactory.decodeResource(getResources(), R.drawable.bg1)));
+        images.add(new BackgroundImage(R.drawable.bg2, BitmapFactory.decodeResource(getResources(), R.drawable.bg2)));
+        images.add(new BackgroundImage(R.drawable.bg3, BitmapFactory.decodeResource(getResources(), R.drawable.bg3)));
+        images.add(new BackgroundImage(R.drawable.bg4, BitmapFactory.decodeResource(getResources(), R.drawable.bg4)));
+        images.add(new BackgroundImage(R.drawable.bg5, BitmapFactory.decodeResource(getResources(), R.drawable.bg5)));
+        images.add(new BackgroundImage(R.drawable.bg6, BitmapFactory.decodeResource(getResources(), R.drawable.bg6)));
+        images.add(new BackgroundImage(R.drawable.bg7, BitmapFactory.decodeResource(getResources(), R.drawable.bg7)));
+        images.add(new BackgroundImage(R.drawable.bg8, BitmapFactory.decodeResource(getResources(), R.drawable.bg8)));
+    }
+
     @Override
     protected int getLayout() {
         return R.layout.activity_background;
