@@ -103,4 +103,30 @@ public class LikeListFragment extends HLBaseFragment {
         }
         return super.onOptionsItemSelected(item);
     }
+	
+	BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent!=null){
+                String action = intent.getAction();
+                if(action!=null){
+                    if(action.equals(LocalSongRecyclerViewAdapter.ACTION_LIKE_STATE_CHANGE)){
+                        String songID = intent.getStringExtra(MusicDBLoader.SONG_COLUMN_ID);
+                        boolean isLike = intent.getBooleanExtra(MusicDBLoader.IS_LIKE,false);
+                        if(songID!=null){
+                            int i = 0;
+                            for(Song song:list){
+                                if(song.getId().equals(songID)){
+                                    list.remove(i);
+                                    adapter.notifyDataSetChanged();
+                                    return;
+                                }
+                                i++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
 }
