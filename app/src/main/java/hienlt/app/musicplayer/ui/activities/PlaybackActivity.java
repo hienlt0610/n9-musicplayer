@@ -88,7 +88,64 @@ public class PlaybackActivity extends HLBaseActivity implements View.OnClickList
 
     @Override
     public void onClick(View v) {
-        
+        Intent intent = null;
+        switch (v.getId()) {
+            case R.id.btnPlay:
+                intent = new Intent(PlaybackActivity.this, MusicService.class);
+                intent.setAction(MusicService.ACTION_TOGGLE_PLAY_PAUSE);
+                startService(intent);
+                break;
+            case R.id.btnNext:
+                intent = new Intent(PlaybackActivity.this, MusicService.class);
+                intent.setAction(MusicService.ACTION_NEXT);
+                startService(intent);
+                break;
+            case R.id.btnPrevious:
+                intent = new Intent(PlaybackActivity.this, MusicService.class);
+                intent.setAction(MusicService.ACTION_PREVIOUS);
+                startService(intent);
+                break;
+            case R.id.btnShuffle:
+                if (mService == null) return;
+                mService.setShuffle(!mService.isShuffle(), true);
+                updateShuffleRepeatState();
+                break;
+            case R.id.btnRepeat:
+                if (mService == null) return;
+                mService.setRepeat(!mService.isRepeat(), true);
+                updateShuffleRepeatState();
+                break;
+            case R.id.btnPlaylist:
+                if (mService != null) {
+                    final ArrayList<Song> songs = mService.getPlaylistSong();
+                    if (songs != null) {
+                        final PlaylistDialog dialog = new PlaylistDialog(this);
+                        dialog.setListSong(new ArrayList<Song>(songs));
+                        dialog.setCurrentPlay(mService.getCurrentSong());
+                        dialog.setOnDeleteClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                int position = (int) v.getTag();
+                                songs.remove(position);
+                                dialog.replaceList(songs);
+                            }
+                        });
+                        dialog.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                if (mService != null) {
+                                    mService.setSongPosition(position);
+                                    mService.playSong();
+                                    dialog.replaceCurrentPlay(songs.get(position));
+                                }
+                            }
+                        });
+                        dialog.show();
+                    }
+                }
+                break;
+
+        }
     }
 
     @Override
@@ -308,6 +365,35 @@ public class PlaybackActivity extends HLBaseActivity implements View.OnClickList
         filter.addAction(MusicService.EXIT);
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
     }
+
+    /**
+     * Receive the service call
+     */
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Common.showLog("BroadCast action: " + intent.getAction() + " - " + mService.getState().toString());
+            String action = intent.getAction();
+            if (action.equals(MusicService.META_CHANGE)) {
+                updateTrackInfo();
+                lyricFragment = (LyricFragment) adapter.getPagerFragment(pager, 0);
+                lyricFragment.updateLyric();
+            }
+            if (action.equals(MusicService.PLAY_STATE_CHANGE)) {
+                updateTimeplay();
+                updatePlayState();
+                if (mService.getState() == MusicService.MusicState.Preparing || mService.getState() == MusicService.MusicState.Stop) {
+                    songProgressBar.setProgress(0);
+                    songProgressBar.setSecondaryProgress(0);
+                    tvCurrentPlay.setText("00:00");
+                }
+            }
+            if (action.equals(MusicService.EXIT)) {
+                finish();
+            }
+        }
+    };
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_playing, menu);
