@@ -125,7 +125,48 @@ public class PlaybackActivity extends HLBaseActivity implements View.OnClickList
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            this.finish();
+        }
+        if (id == R.id.action_timmer) {
+            Dialog dialog = new Dialog(this);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            View view = LayoutInflater.from(this).inflate(R.layout.dialog_timer, null);
+            dialog.setContentView(view);
+            SeekBar seekBar = (SeekBar) view.findViewById(R.id.seekMinute);
+            final TextView tvTime = (TextView) view.findViewById(R.id.tvTime);
+
+            if (mService != null && mService.getSecondsCountdown() > 0) {
+                seekBar.setProgress((mService.getSecondsCountdown() / 60) + 1);
+                tvTime.setText("Tắt nhạc sau: " + ((mService.getSecondsCountdown() / 60) + 1) + " phút");
+            } else {
+                seekBar.setProgress(0);
+                tvTime.setText("Tắt nhạc sau: " + 0 + " phút");
+            }
+
+            dialog.show();
+
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    tvTime.setText("Tắt nhạc sau: " + progress + " phút");
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    int minutes = seekBar.getProgress();
+                    if (mService != null)
+                        mService.setTimer(minutes);
+                }
+            });
+
+        }
         return super.onOptionsItemSelected(item);
     }
 
