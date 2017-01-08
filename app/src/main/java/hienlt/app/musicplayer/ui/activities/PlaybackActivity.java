@@ -131,7 +131,27 @@ public class PlaybackActivity extends HLBaseActivity implements View.OnClickList
 
     
 
-    
+    private void updatePlayState() {
+        if (mService == null) return;
+        if (mService.getState() == MusicService.MusicState.Playing) {
+            btnPlay.setImageResource(R.drawable.playback_pause_selector);
+        } else {
+            btnPlay.setImageResource(R.drawable.playback_play_selector);
+        }
+    }
+
+    private void updateShuffleRepeatState() {
+        if (mService == null) return;
+        if (mService.isShuffle())
+            btnShuffle.setImageResource(R.drawable.img_playback_shuffle_press);
+        else
+            btnShuffle.setImageResource(R.drawable.img_playback_shuffle);
+
+        if (mService.isRepeat())
+            btnRepeat.setImageResource(R.drawable.img_playback_repeat_press);
+        else
+            btnRepeat.setImageResource(R.drawable.img_playback_repeat);
+    }
 
     private void updateTimeplay() {
         handler.removeCallbacks(mUpdateTimeTask);
