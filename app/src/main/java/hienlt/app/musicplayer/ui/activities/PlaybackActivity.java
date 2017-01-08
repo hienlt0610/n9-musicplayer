@@ -129,7 +129,54 @@ public class PlaybackActivity extends HLBaseActivity implements View.OnClickList
         return super.onOptionsItemSelected(item);
     }
 
-    
+    private void updateTrackInfo() {
+        if (mService == null) return;
+        Song song = mService.getCurrentSong();
+        if (song == null) return;
+
+        getSupportActionBar().setTitle(song.getTitle());
+        getSupportActionBar().setSubtitle(song.getArtist());
+        if (mService.getState() == MusicService.MusicState.Playing)
+            tvEndPlay.setText(Common.miliSecondToString(mService.getDuration()));
+        if (mService.getMediaType() == MusicService.MediaType.Local) {
+//            DiskLruImageCache albumCache = CacheManager.getInstance().getAlbumCache();
+//            if (albumCache != null) {
+//                Bitmap bitmap = null;
+//                if (albumCache.containsKey(song.getAlbum())) {
+//                    bitmap = albumCache.getBitmap(song.getAlbum());
+//                    setBackground(bitmap, false);
+//                } else {
+//                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.adele);
+//                    setBackground(bitmap, false);
+//                }
+//            }
+            if (song.getAlbumPicture() != null) {
+                setBackground(song.getAlbumPicture(), false);
+            } else {
+                boolean isDefaultBackground = Settings.getInstance().get(Common.DEFAULT_BACKGROUND, false);
+                Bitmap falseBkg = BitmapFactory.decodeResource(getResources(), R.drawable.adele);
+                if (isDefaultBackground) {
+                    int bkgId = Settings.getInstance().get(Common.BACKGROUND_ID, 0);
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), bkgId);
+                    if (bitmap != null)
+                        setBackground(bitmap, false);
+                    else
+                        setBackground(falseBkg, false);
+                } else {
+                    String path = Settings.getInstance().get(Common.MY_BACKGROUND, "");
+                    Bitmap bitmap = BitmapFactory.decodeFile(path);
+                    if (bitmap != null)
+                        setBackground(bitmap, false);
+                    else
+                        setBackground(falseBkg, false);
+                }
+
+            }
+        } else if (mService.getMediaType() == MusicService.MediaType.Youtube) {
+            if (mService.youtubeInfo != null)
+                Picasso.with(this).load(mService.youtubeInfo.getThumbnailUrl()).error(R.drawable.adele).memoryPolicy(MemoryPolicy.NO_CACHE).into(imgBackground);
+        }
+    }
 
     private void updatePlayState() {
         if (mService == null) return;
